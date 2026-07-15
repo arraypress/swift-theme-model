@@ -22,38 +22,67 @@ public struct ThemePalette: Codable, Equatable, Sendable {
     public var appearance: String
 
     // Editor surface
+
+    /// The editor's background color.
     public var background: String
+    /// The default text color.
     public var foreground: String
+    /// The insertion-point (caret) color.
     public var cursor: String
+    /// The selected-text background color.
     public var selection: String
 
     // Syntax
+
+    /// Comments.
     public var comment: String
+    /// String literals.
     public var string: String
+    /// Language keywords (`if`, `func`, `return`, …).
     public var keyword: String
+    /// Type names (classes, structs, enums).
     public var type: String
+    /// Numeric literals and constants.
     public var number: String
+    /// Function and method names.
     public var function: String
+    /// Variable names.
     public var variable: String
+    /// Member/property accesses and object keys.
     public var property: String
 
     // Accents / chrome
+
+    /// The theme's accent color (buttons, highlights, active indicators).
     public var accent: String
+    /// The sidebar / file-tree background.
     public var sidebarBackground: String
+    /// The sidebar / file-tree text color.
     public var sidebarText: String
+    /// The tab-bar strip background.
     public var tabBarBackground: String
+    /// Inactive tab title text.
     public var tabText: String
+    /// Active (selected) tab title text.
     public var tabActiveText: String
+    /// Divider/border color between panes and panels.
     public var border: String
+    /// The line-number gutter background.
     public var gutterBackground: String
+    /// Line numbers for inactive lines.
     public var gutterText: String
+    /// The line number of the line the cursor is on.
     public var gutterActiveText: String
+    /// The status-bar background.
     public var statusBackground: String
+    /// The status-bar text color.
     public var statusText: String
 
     /// Whether the theme is dark (anything other than `"light"`).
     public var isDark: Bool { appearance.lowercased() != "light" }
 
+    /// Memberwise initializer — every role is required; there are no derived
+    /// defaults, so a palette is always fully specified.
     public init(
         name: String, appearance: String,
         background: String, foreground: String, cursor: String, selection: String,

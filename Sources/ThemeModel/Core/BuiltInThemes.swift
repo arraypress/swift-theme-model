@@ -9,9 +9,14 @@
 
 import Foundation
 
+/// Ready-made ``ThemePalette``s for well-known editor color schemes.
+///
+/// Use one directly (e.g. `BuiltInThemes.dracula`) or iterate ``all`` to
+/// populate a theme picker.
 public enum BuiltInThemes {
 
-    // Default — matches the original hardcoded Sidewatch look.
+    /// Monokai — the classic warm dark theme. The default palette; matches the
+    /// original hardcoded Sidewatch look.
     public static let monokai = ThemePalette(
         name: "Monokai",
         appearance: "dark",
@@ -41,6 +46,7 @@ public enum BuiltInThemes {
         statusText: "#90908A"
     )
 
+    /// One Dark — Atom's default dark theme.
     public static let oneDark = ThemePalette(
         name: "One Dark",
         appearance: "dark",
@@ -70,6 +76,7 @@ public enum BuiltInThemes {
         statusText: "#9DA5B4"
     )
 
+    /// GitHub Dark — GitHub's dark web/editor scheme.
     public static let githubDark = ThemePalette(
         name: "GitHub Dark",
         appearance: "dark",
@@ -99,6 +106,7 @@ public enum BuiltInThemes {
         statusText: "#8B949E"
     )
 
+    /// Solarized Dark — Ethan Schoonover's low-contrast dark palette.
     public static let solarizedDark = ThemePalette(
         name: "Solarized Dark",
         appearance: "dark",
@@ -128,6 +136,7 @@ public enum BuiltInThemes {
         statusText: "#586E75"
     )
 
+    /// Solarized Light — the light counterpart to Solarized Dark.
     public static let solarizedLight = ThemePalette(
         name: "Solarized Light",
         appearance: "light",
@@ -157,7 +166,7 @@ public enum BuiltInThemes {
         statusText: "#657B83"
     )
 
-    // Near-black with electric neon-green — hacker/terminal aesthetic.
+    /// Neon — near-black with electric neon-green; hacker/terminal aesthetic.
     public static let neon = ThemePalette(
         name: "Neon",
         appearance: "dark",
@@ -187,6 +196,7 @@ public enum BuiltInThemes {
         statusText: "#7E9086"
     )
 
+    /// Dracula — the popular purple-tinted dark theme.
     public static let dracula = ThemePalette(
         name: "Dracula", appearance: "dark",
         background: "#282A36", foreground: "#F8F8F2", cursor: "#F8F8F2", selection: "#44475A",
@@ -197,6 +207,7 @@ public enum BuiltInThemes {
         gutterBackground: "#282A36", gutterText: "#6272A4", gutterActiveText: "#B4B8CC",
         statusBackground: "#191A21", statusText: "#B4B8CC")
 
+    /// Nord — the arctic blue-grey palette.
     public static let nord = ThemePalette(
         name: "Nord", appearance: "dark",
         background: "#2E3440", foreground: "#D8DEE9", cursor: "#D8DEE9", selection: "#434C5E",
@@ -207,6 +218,7 @@ public enum BuiltInThemes {
         gutterBackground: "#2E3440", gutterText: "#4C566A", gutterActiveText: "#AEB6C6",
         statusBackground: "#272B35", statusText: "#AEB6C6")
 
+    /// Tokyo Night — deep indigo with pastel syntax colors.
     public static let tokyoNight = ThemePalette(
         name: "Tokyo Night", appearance: "dark",
         background: "#1A1B26", foreground: "#A9B1D6", cursor: "#C0CAF5", selection: "#33467C",
@@ -217,6 +229,7 @@ public enum BuiltInThemes {
         gutterBackground: "#1A1B26", gutterText: "#363B54", gutterActiveText: "#737AA2",
         statusBackground: "#16161E", statusText: "#9AA5CE")
 
+    /// Catppuccin Mocha — the soothing pastel dark variant.
     public static let catppuccin = ThemePalette(
         name: "Catppuccin Mocha", appearance: "dark",
         background: "#1E1E2E", foreground: "#CDD6F4", cursor: "#F5E0DC", selection: "#414458",
@@ -227,6 +240,7 @@ public enum BuiltInThemes {
         gutterBackground: "#1E1E2E", gutterText: "#45475A", gutterActiveText: "#9399B2",
         statusBackground: "#11111B", statusText: "#BAC2DE")
 
+    /// Gruvbox Dark — retro warm earth tones.
     public static let gruvbox = ThemePalette(
         name: "Gruvbox Dark", appearance: "dark",
         background: "#282828", foreground: "#EBDBB2", cursor: "#EBDBB2", selection: "#3C3836",
@@ -237,6 +251,7 @@ public enum BuiltInThemes {
         gutterBackground: "#282828", gutterText: "#7C6F64", gutterActiveText: "#BDAE93",
         statusBackground: "#1D2021", statusText: "#D5C4A1")
 
+    /// Ayu Dark — near-black with warm orange/gold accents.
     public static let ayu = ThemePalette(
         name: "Ayu Dark", appearance: "dark",
         background: "#0B0E14", foreground: "#BFBDB6", cursor: "#E6B450", selection: "#1C2733",
@@ -247,6 +262,7 @@ public enum BuiltInThemes {
         gutterBackground: "#0B0E14", gutterText: "#3D424D", gutterActiveText: "#8A9199",
         statusBackground: "#0B0E14", statusText: "#9DA3A9")
 
+    /// Every built-in palette, in theme-picker display order (not alphabetical).
     public static let all: [ThemePalette] = [
         oneDark, dracula, tokyoNight, catppuccin, nord, gruvbox, ayu,
         monokai, githubDark, solarizedDark, solarizedLight, neon,
