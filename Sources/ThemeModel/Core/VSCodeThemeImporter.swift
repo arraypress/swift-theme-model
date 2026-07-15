@@ -30,18 +30,27 @@ public enum VSCodeThemeImporter {
 
         func ui(_ key: String, _ fallback: String) -> String { hex6(colors[key] as? String) ?? fallback }
 
+        // Pre-extract each token rule's scopes + foreground once (rules without a
+        // usable foreground are ignored, matching the old behavior).
+        let rules: [(scopes: [String], fg: String)] = tokens.compactMap { t in
+            let scopes: [String]
+            if let s = t["scope"] as? String {
+                scopes = s.components(separatedBy: ",").map { $0.trimmingCharacters(in: .whitespaces) }
+            } else if let arr = t["scope"] as? [String] {
+                scopes = arr
+            } else { return nil }
+            guard let settings = t["settings"] as? [String: Any],
+                  let fg = hex6(settings["foreground"] as? String) else { return nil }
+            return (scopes, fg)
+        }
+
         func scope(_ needles: [String], _ fallback: String) -> String {
-            for t in tokens {
-                let scopes: [String]
-                if let s = t["scope"] as? String {
-                    scopes = s.components(separatedBy: ",").map { $0.trimmingCharacters(in: .whitespaces) }
-                } else if let arr = t["scope"] as? [String] {
-                    scopes = arr
-                } else { continue }
-                let hit = scopes.contains { s in needles.contains { s == $0 || s.hasPrefix($0 + ".") } }
-                if hit, let settings = t["settings"] as? [String: Any], let fg = hex6(settings["foreground"] as? String) {
-                    return fg
-                }
+            // Needles are ordered specific → generic; honor that ordering. Within a
+            // needle, an exact scope match beats a prefix match, and the LAST
+            // matching rule wins (approximating VS Code's later-rule-wins).
+            for needle in needles {
+                if let fg = rules.last(where: { $0.scopes.contains(needle) })?.fg { return fg }
+                if let fg = rules.last(where: { $0.scopes.contains { $0.hasPrefix(needle + ".") } })?.fg { return fg }
             }
             return fallback
         }
@@ -52,8 +61,15 @@ public enum VSCodeThemeImporter {
 
         // Many VS Code theme JSONs omit `type` (it lives in the extension manifest,
         // not the color-theme file), so fall back to the background's luminance.
-        let appearance = (json["type"] as? String).map { $0 == "light" ? "light" : "dark" }
-            ?? (isLight(bg) ? "light" : "dark")
+        // Known types: light/dark plus the high-contrast pair (hcLight is LIGHT);
+        // anything unrecognized also falls back to luminance.
+        let appearance: String = {
+            switch (json["type"] as? String)?.lowercased() {
+            case "light", "hclight", "hc-light": return "light"
+            case "dark", "hc", "hcdark", "hc-dark", "hc-black": return "dark"
+            default: return isLight(bg) ? "light" : "dark"
+            }
+        }()
 
         return ThemePalette(
             name: (json["name"] as? String) ?? fallbackName,
@@ -96,7 +112,9 @@ public enum VSCodeThemeImporter {
     /// Normalizes a hex color string to `#RRGGBB`, expanding `#RGB`/`#RGBA`
     /// shorthand and dropping any 2-digit alpha. Returns `nil` if not a hex color.
     static func hex6(_ s: String?) -> String? {
-        guard var s = s, s.hasPrefix("#") else { return nil }
+        guard var s = s, s.hasPrefix("#"),
+              !s.dropFirst().isEmpty,
+              s.dropFirst().allSatisfy({ $0.isASCII && $0.isHexDigit }) else { return nil }
         if s.count == 4 || s.count == 5 {   // expand #RGB / #RGBA shorthand
             s = "#" + s.dropFirst().map { "\($0)\($0)" }.joined()
         }

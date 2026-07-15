@@ -88,6 +88,70 @@ final class ThemeModelTests: XCTestCase {
         XCTAssertNil(VSCodeThemeImporter.hex6(nil))
     }
 
+    /// Regression: hex6 must reject strings whose payload isn't hex digits —
+    /// it used to pass "#GGGGGG" / "#no-way" through as "colors".
+    func testHex6RejectsNonHexDigits() {
+        XCTAssertNil(VSCodeThemeImporter.hex6("#GGGGGG"))
+        XCTAssertNil(VSCodeThemeImporter.hex6("#no-way"))
+        XCTAssertNil(VSCodeThemeImporter.hex6("#zzz"))
+        XCTAssertNil(VSCodeThemeImporter.hex6("#"))
+        XCTAssertNil(VSCodeThemeImporter.hex6("#+2345"))                  // Int(radix:) would accept a sign
+        XCTAssertEqual(VSCodeThemeImporter.hex6("#AbCdEf"), "#AbCdEf")    // mixed case still valid
+    }
+
+    /// Regression: a non-hex "color" in the theme must engage the fallback chain,
+    /// not leak the garbage string into the palette.
+    func testImportFallsBackOnNonHexColor() throws {
+        let json = ##"{"colors": {"editor.background": "#no-way"}}"##
+        let p = try XCTUnwrap(VSCodeThemeImporter.palette(from: Data(json.utf8), fallbackName: "t"))
+        XCTAssertEqual(p.background, "#1E1E1E")                           // fallback, not "#no-way"
+    }
+
+    // MARK: - Appearance from `type`
+
+    /// Regression: VS Code's "hcLight" (high-contrast light) type was mapped to dark.
+    func testHCLightTypeIsLight() throws {
+        let json = ##"{"type": "hcLight", "colors": {"editor.background": "#FFFFFF"}}"##
+        let p = try XCTUnwrap(VSCodeThemeImporter.palette(from: Data(json.utf8), fallbackName: "t"))
+        XCTAssertEqual(p.appearance, "light")
+        XCTAssertFalse(p.isDark)
+    }
+
+    /// An unrecognized `type` string falls through to the background-luminance heuristic.
+    func testUnknownTypeFallsBackToLuminance() throws {
+        let json = ##"{"type": "surprise", "colors": {"editor.background": "#FFFFFF"}}"##
+        let p = try XCTUnwrap(VSCodeThemeImporter.palette(from: Data(json.utf8), fallbackName: "t"))
+        XCTAssertFalse(p.isDark)
+    }
+
+    // MARK: - scope() needle priority
+
+    /// Regression: a generic rule earlier in the file (constant.language matching
+    /// the "constant" needle by prefix) used to beat a later exact
+    /// "constant.numeric" rule; needle order must win over file order.
+    func testScopeNeedlePriorityBeatsFileOrder() throws {
+        let json = """
+        {"tokenColors": [
+            {"scope": "constant.language", "settings": {"foreground": "#FF0000"}},
+            {"scope": "constant.numeric",  "settings": {"foreground": "#00FF00"}}
+        ]}
+        """
+        let p = try XCTUnwrap(VSCodeThemeImporter.palette(from: Data(json.utf8), fallbackName: "t"))
+        XCTAssertEqual(p.number, "#00FF00")
+    }
+
+    /// Within one needle tier, the LAST matching rule wins (VS Code's later-rule-wins).
+    func testScopeLaterRuleWinsWithinTier() throws {
+        let json = """
+        {"tokenColors": [
+            {"scope": "comment", "settings": {"foreground": "#111111"}},
+            {"scope": "comment", "settings": {"foreground": "#222222"}}
+        ]}
+        """
+        let p = try XCTUnwrap(VSCodeThemeImporter.palette(from: Data(json.utf8), fallbackName: "t"))
+        XCTAssertEqual(p.comment, "#222222")
+    }
+
     // MARK: - JSONC sanitizer
 
     func testSanitizeStripsCommentsAndTrailingCommas() {
