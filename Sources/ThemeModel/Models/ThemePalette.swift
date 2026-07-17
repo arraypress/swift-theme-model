@@ -78,11 +78,80 @@ public struct ThemePalette: Codable, Equatable, Sendable {
     /// The status-bar text color.
     public var statusText: String
 
+    // Terminal (ANSI)
+    //
+    // Optional: most themes specify none, and every field must stay decode-safe
+    // so palettes written before these existed still round-trip. Read the
+    // complete set through `resolvedANSI`, never these directly.
+
+    /// ANSI 0 — black.
+    public var ansiBlack: String?
+    /// ANSI 1 — red.
+    public var ansiRed: String?
+    /// ANSI 2 — green.
+    public var ansiGreen: String?
+    /// ANSI 3 — yellow.
+    public var ansiYellow: String?
+    /// ANSI 4 — blue.
+    public var ansiBlue: String?
+    /// ANSI 5 — magenta.
+    public var ansiMagenta: String?
+    /// ANSI 6 — cyan.
+    public var ansiCyan: String?
+    /// ANSI 7 — white.
+    public var ansiWhite: String?
+    /// ANSI 8 — bright black (grey).
+    public var ansiBrightBlack: String?
+    /// ANSI 9 — bright red.
+    public var ansiBrightRed: String?
+    /// ANSI 10 — bright green.
+    public var ansiBrightGreen: String?
+    /// ANSI 11 — bright yellow.
+    public var ansiBrightYellow: String?
+    /// ANSI 12 — bright blue.
+    public var ansiBrightBlue: String?
+    /// ANSI 13 — bright magenta.
+    public var ansiBrightMagenta: String?
+    /// ANSI 14 — bright cyan.
+    public var ansiBrightCyan: String?
+    /// ANSI 15 — bright white.
+    public var ansiBrightWhite: String?
+
     /// Whether the theme is dark (anything other than `"light"`).
     public var isDark: Bool { appearance.lowercased() != "light" }
 
-    /// Memberwise initializer — every role is required; there are no derived
-    /// defaults, so a palette is always fully specified.
+    /// The theme's complete 16-color ANSI terminal palette: each slot this theme
+    /// specifies, with every gap filled from the curated set matching its
+    /// ``isDark`` appearance (``ANSIColors/dark`` / ``ANSIColors/light``).
+    ///
+    /// A theme that specifies none — every built-in — resolves to the curated
+    /// set outright, which is the point: a light theme gets a light-appropriate
+    /// palette without anyone hand-authoring 16 colors per theme.
+    public var resolvedANSI: ANSIColors {
+        let base = ANSIColors.curated(isDark: isDark)
+        return ANSIColors(
+            black: ansiBlack ?? base.black,
+            red: ansiRed ?? base.red,
+            green: ansiGreen ?? base.green,
+            yellow: ansiYellow ?? base.yellow,
+            blue: ansiBlue ?? base.blue,
+            magenta: ansiMagenta ?? base.magenta,
+            cyan: ansiCyan ?? base.cyan,
+            white: ansiWhite ?? base.white,
+            brightBlack: ansiBrightBlack ?? base.brightBlack,
+            brightRed: ansiBrightRed ?? base.brightRed,
+            brightGreen: ansiBrightGreen ?? base.brightGreen,
+            brightYellow: ansiBrightYellow ?? base.brightYellow,
+            brightBlue: ansiBrightBlue ?? base.brightBlue,
+            brightMagenta: ansiBrightMagenta ?? base.brightMagenta,
+            brightCyan: ansiBrightCyan ?? base.brightCyan,
+            brightWhite: ansiBrightWhite ?? base.brightWhite)
+    }
+
+    /// Memberwise initializer — every editor role is required; there are no
+    /// derived defaults, so a palette is always fully specified. The ANSI
+    /// terminal colors are the exception: they default to `nil` (meaning "use
+    /// the curated set for this appearance" — see ``resolvedANSI``).
     public init(
         name: String, appearance: String,
         background: String, foreground: String, cursor: String, selection: String,
@@ -91,7 +160,14 @@ public struct ThemePalette: Codable, Equatable, Sendable {
         accent: String, sidebarBackground: String, sidebarText: String,
         tabBarBackground: String, tabText: String, tabActiveText: String, border: String,
         gutterBackground: String, gutterText: String, gutterActiveText: String,
-        statusBackground: String, statusText: String
+        statusBackground: String, statusText: String,
+        ansiBlack: String? = nil, ansiRed: String? = nil, ansiGreen: String? = nil,
+        ansiYellow: String? = nil, ansiBlue: String? = nil, ansiMagenta: String? = nil,
+        ansiCyan: String? = nil, ansiWhite: String? = nil,
+        ansiBrightBlack: String? = nil, ansiBrightRed: String? = nil,
+        ansiBrightGreen: String? = nil, ansiBrightYellow: String? = nil,
+        ansiBrightBlue: String? = nil, ansiBrightMagenta: String? = nil,
+        ansiBrightCyan: String? = nil, ansiBrightWhite: String? = nil
     ) {
         self.name = name; self.appearance = appearance
         self.background = background; self.foreground = foreground
@@ -105,5 +181,13 @@ public struct ThemePalette: Codable, Equatable, Sendable {
         self.gutterBackground = gutterBackground; self.gutterText = gutterText
         self.gutterActiveText = gutterActiveText
         self.statusBackground = statusBackground; self.statusText = statusText
+        self.ansiBlack = ansiBlack; self.ansiRed = ansiRed
+        self.ansiGreen = ansiGreen; self.ansiYellow = ansiYellow
+        self.ansiBlue = ansiBlue; self.ansiMagenta = ansiMagenta
+        self.ansiCyan = ansiCyan; self.ansiWhite = ansiWhite
+        self.ansiBrightBlack = ansiBrightBlack; self.ansiBrightRed = ansiBrightRed
+        self.ansiBrightGreen = ansiBrightGreen; self.ansiBrightYellow = ansiBrightYellow
+        self.ansiBrightBlue = ansiBrightBlue; self.ansiBrightMagenta = ansiBrightMagenta
+        self.ansiBrightCyan = ansiBrightCyan; self.ansiBrightWhite = ansiBrightWhite
     }
 }

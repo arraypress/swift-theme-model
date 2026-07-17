@@ -5,7 +5,8 @@ A tiny, dependency-free editor **theme model** + a robust **VS Code theme import
 ## Features
 
 - 🎨 **`ThemePalette`** — a flat, `Codable`, `Sendable` hex-based theme: editor surface + 8 syntax roles + chrome (sidebar, tabs, gutter, status bar), plus an `isDark` convenience
-- 🧩 **VS Code importer** — `VSCodeThemeImporter.palette(from:fallbackName:)` maps a theme's `colors` UI keys + `tokenColors` TextMate scopes onto a palette, with sensible fallbacks for missing keys
+- 🖥️ **ANSI terminal colors** — the 16 `ansi*` slots are optional (a theme that predates them still decodes); `palette.resolvedANSI` always returns a complete `ANSIColors` set, filling anything the theme omits from a curated palette matching its appearance — so a light theme gets a *light-appropriate* terminal, not a lightened dark one
+- 🧩 **VS Code importer** — `VSCodeThemeImporter.palette(from:fallbackName:)` maps a theme's `colors` UI keys + `tokenColors` TextMate scopes (and the 16 `terminal.ansi*` keys, when present) onto a palette, with sensible fallbacks for missing keys
 - 🛡️ **JSONC-tolerant** — strips `//` / `/* */` comments and trailing commas (string-aware), because many published themes are JSONC and `JSONSerialization` alone rejects them
 - 🎯 **Scope resolution that matches VS Code** — needles are tried specific → generic, exact scope beats prefix match, and the last matching rule wins within a tier
 - 🌗 **Smart appearance detection** — honors the theme's `type` (including the high-contrast variants; `hc-light` is light), and falls back to background luminance when `type` is absent (it often lives in the extension manifest, not the theme file)
@@ -53,6 +54,15 @@ for theme in BuiltInThemes.all {
 // ThemePalette is Codable — round-trip it to disk.
 let saved = try JSONEncoder().encode(dracula)
 let restored = try JSONDecoder().decode(ThemePalette.self, from: saved)
+
+// The 16 ANSI terminal colors, always complete: whatever the theme specifies,
+// with every gap filled from the curated set for its appearance.
+let ansi = palette.resolvedANSI
+terminalView.installColors(ansi.indexed.map(MyColor.init))   // ANSI index order, 0…15
+print(ansi.red, ansi.brightWhite)
+
+// Themes may specify none (every built-in does) — you still get a readable set.
+BuiltInThemes.solarizedLight.resolvedANSI == ANSIColors.light   // true
 ```
 
 ## License

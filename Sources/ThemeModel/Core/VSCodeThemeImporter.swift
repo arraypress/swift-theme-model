@@ -17,6 +17,10 @@ import Foundation
 /// expanded, and 8-digit `#RRGGBBAA` values are trimmed to `#RRGGBB`. Input may be
 /// **JSONC** (with `//` / `/* */` comments and trailing commas) — many published
 /// themes are — and is sanitized before parsing.
+///
+/// The 16 `terminal.ansi*` keys are imported when present and left `nil`
+/// otherwise, so a theme without them resolves to a curated set matching its
+/// appearance (see ``ThemePalette/resolvedANSI``).
 public enum VSCodeThemeImporter {
 
     /// Parses a VS Code theme from raw file `data`.
@@ -29,6 +33,11 @@ public enum VSCodeThemeImporter {
         let tokens = json["tokenColors"] as? [[String: Any]] ?? []
 
         func ui(_ key: String, _ fallback: String) -> String { hex6(colors[key] as? String) ?? fallback }
+
+        // Terminal ANSI colors: passed through as optionals (no fallback) — a
+        // theme that omits them resolves to the curated set for its appearance
+        // via `ThemePalette.resolvedANSI`, rather than being pinned here.
+        func ansi(_ key: String) -> String? { hex6(colors["terminal.ansi" + key] as? String) }
 
         // Pre-extract each token rule's scopes + foreground once (rules without a
         // usable foreground are ignored, matching the old behavior).
@@ -97,7 +106,15 @@ public enum VSCodeThemeImporter {
             gutterText: ui("editorLineNumber.foreground", "#858585"),
             gutterActiveText: ui("editorLineNumber.activeForeground", fg),
             statusBackground: ui("statusBar.background", bg),
-            statusText: ui("statusBar.foreground", fg))
+            statusText: ui("statusBar.foreground", fg),
+            ansiBlack: ansi("Black"), ansiRed: ansi("Red"),
+            ansiGreen: ansi("Green"), ansiYellow: ansi("Yellow"),
+            ansiBlue: ansi("Blue"), ansiMagenta: ansi("Magenta"),
+            ansiCyan: ansi("Cyan"), ansiWhite: ansi("White"),
+            ansiBrightBlack: ansi("BrightBlack"), ansiBrightRed: ansi("BrightRed"),
+            ansiBrightGreen: ansi("BrightGreen"), ansiBrightYellow: ansi("BrightYellow"),
+            ansiBrightBlue: ansi("BrightBlue"), ansiBrightMagenta: ansi("BrightMagenta"),
+            ansiBrightCyan: ansi("BrightCyan"), ansiBrightWhite: ansi("BrightWhite"))
     }
 
     /// Whether a `#RRGGBB` color reads as "light" (perceived luminance), used to

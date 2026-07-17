@@ -178,6 +178,112 @@ final class ThemeModelTests: XCTestCase {
         XCTAssertEqual(obj?["name"] as? String, "http://not-a-comment")
     }
 
+    // MARK: - ANSI terminal colors
+
+    /// A theme with no `terminal.*` keys — every built-in, and most real VS Code
+    /// themes — must resolve to the curated set for its appearance, not to
+    /// nothing (the terminal would render through a palette for the wrong
+    /// background).
+    func testANSIFallsBackToCuratedSetByAppearance() throws {
+        let dark = try XCTUnwrap(VSCodeThemeImporter.palette(
+            from: Data(##"{"type": "dark", "colors": {"editor.background": "#101010"}}"##.utf8),
+            fallbackName: "d"))
+        XCTAssertNil(dark.ansiRed, "no terminal.* key → the stored field stays nil")
+        XCTAssertEqual(dark.resolvedANSI, .dark)
+
+        let light = try XCTUnwrap(VSCodeThemeImporter.palette(
+            from: Data(##"{"type": "light", "colors": {"editor.background": "#FFFFFF"}}"##.utf8),
+            fallbackName: "l"))
+        XCTAssertEqual(light.resolvedANSI, .light)
+
+        // The two curated sets must actually differ, or the light fallback is pointless.
+        XCTAssertNotEqual(ANSIColors.dark, ANSIColors.light)
+        XCTAssertEqual(ANSIColors.curated(isDark: true), .dark)
+        XCTAssertEqual(ANSIColors.curated(isDark: false), .light)
+    }
+
+    /// Every built-in theme resolves to a full 16 valid hex colors.
+    func testBuiltInThemesResolveFullANSIPalette() {
+        for theme in BuiltInThemes.all {
+            let ansi = theme.resolvedANSI
+            XCTAssertEqual(ansi.indexed.count, 16, "\(theme.name) must resolve 16 colors")
+            for (i, hex) in ansi.indexed.enumerated() {
+                XCTAssertTrue(isHex(hex), "\(theme.name) ANSI \(i) = \(hex) is not #RRGGBB")
+            }
+            XCTAssertEqual(ansi, ANSIColors.curated(isDark: theme.isDark))
+        }
+    }
+
+    /// Every real fixture theme resolves 16 valid hex colors, whether it ships
+    /// `terminal.*` keys or not.
+    func testAllRealThemesResolveValidANSI() throws {
+        for name in allThemes {
+            let p = try XCTUnwrap(VSCodeThemeImporter.palette(from: try load(name), fallbackName: name))
+            let ansi = p.resolvedANSI
+            XCTAssertEqual(ansi.indexed.count, 16)
+            for (i, hex) in ansi.indexed.enumerated() {
+                XCTAssertTrue(isHex(hex), "\(name) ANSI \(i) = \(hex) is not #RRGGBB")
+            }
+        }
+    }
+
+    /// A theme that DOES ship `terminal.ansi*` keys has them imported, with hex
+    /// normalization applied and unspecified slots still filled from the curated set.
+    func testANSIImportedFromTerminalKeys() throws {
+        let json = ##"""
+        {"type": "dark", "colors": {
+            "editor.background": "#101010",
+            "terminal.ansiRed": "#ABC",
+            "terminal.ansiGreen": "#00FF0080",
+            "terminal.ansiBrightWhite": "#FAFAFA"
+        }}
+        """##
+        let p = try XCTUnwrap(VSCodeThemeImporter.palette(from: Data(json.utf8), fallbackName: "t"))
+        XCTAssertEqual(p.ansiRed, "#AABBCC")                  // #RGB shorthand expanded
+        XCTAssertEqual(p.ansiGreen, "#00FF00")                // #RRGGBBAA alpha trimmed
+        XCTAssertEqual(p.ansiBrightWhite, "#FAFAFA")
+
+        let ansi = p.resolvedANSI
+        XCTAssertEqual(ansi.red, "#AABBCC")
+        XCTAssertEqual(ansi.brightWhite, "#FAFAFA")
+        XCTAssertEqual(ansi.blue, ANSIColors.dark.blue, "unspecified slots keep the curated color")
+        XCTAssertEqual(ansi.indexed[1], "#AABBCC", "ANSI index order: 1 is red")
+        XCTAssertEqual(ansi.indexed[15], "#FAFAFA", "ANSI index order: 15 is bright white")
+    }
+
+    /// A non-hex `terminal.ansi*` value must be rejected into the fallback, not
+    /// leaked into the palette (the hex6 contract, applied to ANSI too).
+    func testANSIRejectsNonHex() throws {
+        let json = ##"{"type": "dark", "colors": {"terminal.ansiRed": "red"}}"##
+        let p = try XCTUnwrap(VSCodeThemeImporter.palette(from: Data(json.utf8), fallbackName: "t"))
+        XCTAssertNil(p.ansiRed)
+        XCTAssertEqual(p.resolvedANSI.red, ANSIColors.dark.red)
+    }
+
+    /// Decode-safety: palette JSON written before ANSI existed must still decode
+    /// unchanged, and a nil ANSI field must not be encoded.
+    func testPaletteJSONWithoutANSIStillDecodes() throws {
+        let data = try JSONEncoder().encode(BuiltInThemes.monokai)
+        let json = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        XCTAssertNil(json["ansiRed"], "a nil ANSI field must not be encoded")
+
+        let decoded = try JSONDecoder().decode(ThemePalette.self, from: data)
+        XCTAssertEqual(decoded, BuiltInThemes.monokai)
+        XCTAssertNil(decoded.ansiRed)
+        XCTAssertEqual(decoded.resolvedANSI, .dark)
+    }
+
+    /// A stored theme that DOES carry ANSI fields round-trips them.
+    func testPaletteANSIRoundTrips() throws {
+        var p = BuiltInThemes.solarizedLight
+        p.ansiRed = "#DC322F"
+        let decoded = try JSONDecoder().decode(
+            ThemePalette.self, from: try JSONEncoder().encode(p))
+        XCTAssertEqual(decoded.ansiRed, "#DC322F")
+        XCTAssertEqual(decoded.resolvedANSI.red, "#DC322F")
+        XCTAssertEqual(decoded.resolvedANSI.blue, ANSIColors.light.blue)
+    }
+
     // MARK: - Built-in themes
 
     func testBuiltInThemesAreValid() {
