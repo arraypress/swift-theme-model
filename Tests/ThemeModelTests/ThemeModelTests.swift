@@ -202,7 +202,8 @@ final class ThemeModelTests: XCTestCase {
         XCTAssertEqual(ANSIColors.curated(isDark: false), .light)
     }
 
-    /// Every built-in theme resolves to a full 16 valid hex colors.
+    /// Every built-in theme resolves to a full 16 valid hex colors — whether it
+    /// declares its own set or falls back to the curated one for its appearance.
     func testBuiltInThemesResolveFullANSIPalette() {
         for theme in BuiltInThemes.all {
             let ansi = theme.resolvedANSI
@@ -210,7 +211,16 @@ final class ThemeModelTests: XCTestCase {
             for (i, hex) in ansi.indexed.enumerated() {
                 XCTAssertTrue(isHex(hex), "\(theme.name) ANSI \(i) = \(hex) is not #RRGGBB")
             }
-            XCTAssertEqual(ansi, ANSIColors.curated(isDark: theme.isDark))
+            // A theme that declares nothing must land exactly on the curated set
+            // for its appearance; one that declares its own must not be
+            // overwritten by it.
+            if theme.ansiRed == nil {
+                XCTAssertEqual(ansi, ANSIColors.curated(isDark: theme.isDark),
+                               "\(theme.name) declares no ANSI, so it must resolve to the curated set")
+            } else {
+                XCTAssertEqual(ansi.red, theme.ansiRed,
+                               "\(theme.name) declares ANSI, so its own values must win")
+            }
         }
     }
 
@@ -291,5 +301,234 @@ final class ThemeModelTests: XCTestCase {
         XCTAssertTrue(BuiltInThemes.monokai.isDark)
         XCTAssertTrue(isHex(BuiltInThemes.monokai.background))
         XCTAssertFalse(BuiltInThemes.solarizedLight.isDark)
+    }
+
+    // MARK: - Colour math helpers (WCAG 2.1 + an achromaticity proxy)
+
+    private func rgb(_ hex: String) -> (r: Double, g: Double, b: Double) {
+        let h = hex.hasPrefix("#") ? String(hex.dropFirst()) : hex
+        let v = Int(h, radix: 16) ?? 0
+        return (Double((v >> 16) & 0xFF), Double((v >> 8) & 0xFF), Double(v & 0xFF))
+    }
+
+    /// WCAG relative luminance.
+    private func luminance(_ hex: String) -> Double {
+        let c = rgb(hex)
+        func lin(_ v: Double) -> Double {
+            let s = v / 255
+            return s <= 0.03928 ? s / 12.92 : pow((s + 0.055) / 1.055, 2.4)
+        }
+        return 0.2126 * lin(c.r) + 0.7152 * lin(c.g) + 0.0722 * lin(c.b)
+    }
+
+    /// WCAG 2.1 contrast ratio (1…21).
+    private func contrast(_ a: String, _ b: String) -> Double {
+        let (x, y) = (luminance(a), luminance(b))
+        return (max(x, y) + 0.05) / (min(x, y) + 0.05)
+    }
+
+    /// `max(R,G,B) - min(R,G,B)` — 0 for a true grey, large for a saturated
+    /// colour. A cheap, exact stand-in for chroma that needs no Lab conversion.
+    private func spread(_ hex: String) -> Double {
+        let c = rgb(hex)
+        return max(c.r, c.g, c.b) - min(c.r, c.g, c.b)
+    }
+
+    private func syntaxRoles(_ p: ThemePalette) -> [(String, String)] {
+        [("comment", p.comment), ("string", p.string), ("keyword", p.keyword),
+         ("type", p.type), ("number", p.number), ("function", p.function),
+         ("variable", p.variable), ("property", p.property),
+         ("foreground", p.foreground)]
+    }
+
+    // MARK: - Built-in inventory
+
+    func testBuiltInThemeInventory() {
+        XCTAssertEqual(BuiltInThemes.all.count, 24)
+        let light = BuiltInThemes.all.filter { !$0.isDark }
+        let dark = BuiltInThemes.all.filter { $0.isDark }
+        XCTAssertEqual(dark.count, 18)   // + Claude
+        // The point of the light additions: daylight work needs real options.
+        XCTAssertEqual(light.count, 6)
+        XCTAssertEqual(light.map(\.name).sorted(),
+                       ["Catppuccin Latte", "Everforest Light", "GitHub Light",
+                        "Rosé Pine Dawn", "Solarized Light", "Windshield Light"])
+    }
+
+    /// Themes are persisted and looked up BY NAME, so a duplicate name would
+    /// make one theme unselectable.
+    func testBuiltInThemeNamesAreUnique() {
+        let names = BuiltInThemes.all.map(\.name)
+        XCTAssertEqual(Set(names).count, names.count)
+    }
+
+    /// Every colour of every built-in — including all 16 resolved ANSI slots —
+    /// is a valid `#RRGGBB` string.
+    func testEveryBuiltInColorIsValidHex() {
+        for t in BuiltInThemes.all {
+            for (label, value) in syntaxRoles(t) + [
+                ("background", t.background), ("cursor", t.cursor), ("selection", t.selection),
+                ("accent", t.accent), ("sidebarBackground", t.sidebarBackground),
+                ("sidebarText", t.sidebarText), ("tabBarBackground", t.tabBarBackground),
+                ("tabText", t.tabText), ("tabActiveText", t.tabActiveText), ("border", t.border),
+                ("gutterBackground", t.gutterBackground), ("gutterText", t.gutterText),
+                ("gutterActiveText", t.gutterActiveText),
+                ("statusBackground", t.statusBackground), ("statusText", t.statusText),
+            ] {
+                XCTAssertTrue(isHex(value), "\(t.name).\(label) = \(value) is not #RRGGBB")
+            }
+            for (i, hex) in t.resolvedANSI.indexed.enumerated() {
+                XCTAssertTrue(isHex(hex), "\(t.name) ANSI \(i) = \(hex) is not #RRGGBB")
+            }
+        }
+    }
+
+    /// Every theme added alongside the ANSI feature carries its own 16 colours —
+    /// the whole reason the fields exist. (Older built-ins intentionally keep
+    /// `nil` and fall back, since inventing ANSI for someone else's theme would
+    /// be a fabrication.)
+    func testNewThemesDeclareTheirOwnANSI() {
+        let named = ["Windshield Dark", "Windshield Light", "Rosé Pine", "Rosé Pine Moon",
+                     "Rosé Pine Dawn", "Kanagawa Wave", "Everforest Dark", "Everforest Light",
+                     "Night Owl", "Catppuccin Latte", "GitHub Light"]
+        for name in named {
+            let t = try! XCTUnwrap(BuiltInThemes.all.first { $0.name == name })
+            XCTAssertNotNil(t.ansiRed, "\(name) must declare its own ANSI")
+            XCTAssertNotNil(t.ansiBrightWhite, "\(name) must declare a complete ANSI set")
+            XCTAssertNotEqual(t.resolvedANSI, ANSIColors.curated(isDark: t.isDark),
+                              "\(name) declares ANSI, so it must not equal the curated fallback")
+        }
+    }
+
+    // MARK: - Windshield — the signature theme's design invariants
+    //
+    // These encode the thesis: GREYSCALE SYNTAX, FULL-COLOUR SIGNAL. They exist
+    // to fail loudly if someone later "improves" the theme by saturating the
+    // code or muting the terminal — which would quietly delete the whole point.
+
+    private var windshields: [ThemePalette] { [BuiltInThemes.windshieldDark, BuiltInThemes.windshieldLight] }
+
+    /// Syntax must be greyscale: hue is removed as a channel so that the diff
+    /// and git colours are the only chroma on screen.
+    func testWindshieldSyntaxIsGreyscale() {
+        for t in windshields {
+            for (role, hex) in syntaxRoles(t) {
+                XCTAssertLessThanOrEqual(
+                    spread(hex), 12,
+                    "\(t.name).\(role) = \(hex) is not greyscale — the theme's premise is that "
+                    + "syntax carries no hue; colour belongs to the diff/git/terminal signal only")
+            }
+            for (role, hex) in [("background", t.background), ("selection", t.selection),
+                                ("gutterText", t.gutterText), ("cursor", t.cursor)] {
+                XCTAssertLessThanOrEqual(spread(hex), 12, "\(t.name).\(role) must stay greyscale")
+            }
+        }
+    }
+
+    /// …and signal must NOT be greyscale. The accent is this app's git-*modified*
+    /// colour, and ANSI red/green are how an agent says "error" / "passed".
+    func testWindshieldSignalKeepsItsColour() {
+        for t in windshields {
+            XCTAssertGreaterThan(spread(t.accent), 60,
+                                 "\(t.name).accent is the git-modified signal — it must stay saturated")
+            let ansi = t.resolvedANSI
+            for (slot, hex) in [("red", ansi.red), ("green", ansi.green), ("blue", ansi.blue),
+                                ("magenta", ansi.magenta), ("cyan", ansi.cyan),
+                                ("brightRed", ansi.brightRed), ("brightGreen", ansi.brightGreen)] {
+                XCTAssertGreaterThan(spread(hex), 60,
+                                     "\(t.name) ANSI \(slot) = \(hex) must stay saturated — the "
+                                     + "terminal's colour carries meaning the editor's doesn't")
+            }
+        }
+    }
+
+    /// The accent is the git-*modified* colour, while *added* and *deleted* are
+    /// fixed green/red in the app. Its hue must stay far from both or the three
+    /// git states become confusable.
+    func testWindshieldAccentIsFarFromTheDiffHues() {
+        func hue(_ hex: String) -> Double {
+            let c = rgb(hex)
+            let (r, g, b) = (c.r / 255, c.g / 255, c.b / 255)
+            let mx = max(r, g, b), mn = min(r, g, b), d = mx - mn
+            guard d > 0 else { return 0 }
+            let h: Double
+            if mx == r { h = ((g - b) / d).truncatingRemainder(dividingBy: 6) }
+            else if mx == g { h = (b - r) / d + 2 }
+            else { h = (r - g) / d + 4 }
+            return (h * 60 + 360).truncatingRemainder(dividingBy: 360)
+        }
+        func dist(_ a: Double, _ b: Double) -> Double {
+            let d = abs(a - b).truncatingRemainder(dividingBy: 360)
+            return min(d, 360 - d)
+        }
+        let addGreen = hue("#3DB554"), deleteRed = hue("#F24F4A")
+        for t in windshields {
+            let a = hue(t.accent)
+            XCTAssertGreaterThan(dist(a, addGreen), 90, "\(t.name) accent too near the add-green")
+            XCTAssertGreaterThan(dist(a, deleteRed), 90, "\(t.name) accent too near the delete-red")
+        }
+    }
+
+    /// Greyscale removes hue as a redundant cue, so luminance alone must carry
+    /// legibility: every syntax tier — comments included — clears 4.5:1.
+    func testWindshieldContrastFloors() {
+        for t in windshields {
+            for (role, hex) in syntaxRoles(t) {
+                XCTAssertGreaterThanOrEqual(
+                    contrast(hex, t.background), 4.5,
+                    "\(t.name).\(role) falls below 4.5:1 — with no hue to lean on, it becomes unreadable")
+            }
+            // The gutter must recede below the comment tier but stay legible.
+            let gutter = contrast(t.gutterText, t.gutterBackground)
+            XCTAssertGreaterThan(gutter, 3.0, "\(t.name) gutter text is illegible")
+            XCTAssertLessThan(gutter, contrast(t.comment, t.background),
+                              "\(t.name) gutter must not out-shout the code")
+            // Selection must not swallow the caret.
+            XCTAssertGreaterThan(contrast(t.cursor, t.selection), 4.5,
+                                 "\(t.name) selection swallows the cursor")
+            XCTAssertGreaterThan(contrast(t.foreground, t.selection), 4.5,
+                                 "\(t.name) selected text is unreadable")
+        }
+    }
+
+    /// Every ANSI slot legible on the theme's own background — including the
+    /// light variant, where the usual "brights are lighter" convention fails.
+    /// ANSI black is exempt: slot 0 is a background/block colour by convention.
+    func testWindshieldANSIIsLegible() {
+        for t in windshields {
+            let ansi = t.resolvedANSI
+            for (i, hex) in ansi.indexed.enumerated() where i != 0 {
+                XCTAssertGreaterThanOrEqual(
+                    contrast(hex, t.background), 4.5,
+                    "\(t.name) ANSI \(i) = \(hex) is not legible on \(t.background)")
+            }
+        }
+    }
+
+    /// The terminal and the editor speak one vocabulary: a failing test's red is
+    /// literally the same red as a deleted line, and a passing test's green the
+    /// same green as an added one.
+    func testWindshieldANSIMatchesTheAppsDiffConstants() {
+        let ansi = BuiltInThemes.windshieldDark.resolvedANSI
+        XCTAssertEqual(ansi.green.uppercased(), "#3DB554")   // GitStatusMap added
+        XCTAssertEqual(ansi.red.uppercased(), "#F24F4A")     // GitStatusMap deleted
+        XCTAssertEqual(ansi.magenta.uppercased(),
+                       BuiltInThemes.windshieldDark.accent.uppercased())
+    }
+
+    /// On a light background "bright" must mean *more contrast*, not more
+    /// luminance — the conventional lightening walks brights into the page.
+    func testWindshieldLightBrightsAreDarkerThanTheirNormals() {
+        let t = BuiltInThemes.windshieldLight
+        let a = t.resolvedANSI
+        for (normal, bright, slot) in [(a.red, a.brightRed, "red"), (a.green, a.brightGreen, "green"),
+                                       (a.yellow, a.brightYellow, "yellow"), (a.blue, a.brightBlue, "blue"),
+                                       (a.magenta, a.brightMagenta, "magenta"), (a.cyan, a.brightCyan, "cyan")] {
+            XCTAssertGreaterThan(
+                contrast(bright, t.background), contrast(normal, t.background),
+                "light ANSI bright\(slot) must out-contrast \(slot), not out-lighten it")
+        }
+        // Bright black stays the dimmest slot, so dimmed output still reads dim.
+        XCTAssertLessThan(contrast(a.brightBlack, t.background), contrast(a.white, t.background))
     }
 }

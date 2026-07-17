@@ -11,7 +11,11 @@ A tiny, dependency-free editor **theme model** + a robust **VS Code theme import
 - 🎯 **Scope resolution that matches VS Code** — needles are tried specific → generic, exact scope beats prefix match, and the last matching rule wins within a tier
 - 🌗 **Smart appearance detection** — honors the theme's `type` (including the high-contrast variants; `hc-light` is light), and falls back to background luminance when `type` is absent (it often lives in the extension manifest, not the theme file)
 - 🔢 **Hex normalization** — expands `#RGB`/`#RGBA` shorthand, trims `#RRGGBBAA` → `#RRGGBB`, rejects non-hex values
-- 📦 **12 built-in palettes** — `BuiltInThemes.all`: Monokai, One Dark, Dracula, Nord, Tokyo Night, Catppuccin Mocha, Gruvbox Dark, Ayu Dark, GitHub Dark, Solarized Dark/Light, Neon
+- 📦 **23 built-in palettes** — `BuiltInThemes.all`, 17 dark + 6 light:
+  - **Signature** — `windshieldDark`, `windshieldLight` (see below)
+  - **Dark** — One Dark, Dracula, Tokyo Night, Catppuccin Mocha, Rosé Pine, Rosé Pine Moon, Kanagawa Wave, Everforest Dark, Night Owl, Nord, Gruvbox Dark, Ayu Dark, Monokai, GitHub Dark, Solarized Dark, Neon
+  - **Light** — Catppuccin Latte, Rosé Pine Dawn, GitHub Light, Everforest Light, Solarized Light
+- ✒️ **Windshield — a review-first signature theme** (dark + light). Every other theme is designed for *writing* code and spends its colour on the language. Windshield renders **syntax in greyscale** — an eight-tier silver ladder ~6.4 L\* apart, every tier ≥4.5:1 including comments — and spends its entire colour budget on **signal**: the diff tint, git status, and a fully-specified ANSI palette. Against greyscale code, a change is the only chroma on screen. Its accent sits at 247° indigo, the hue maximally distant (≈115°) from both the conventional diff green and diff red, so "modified" can never be mistaken for "added" or "deleted". The greyscale/colour split is enforced by tests, not just documented
 - 🪶 **Zero dependencies** — Foundation only
 - 🍎 **Cross-platform** — iOS, macOS, tvOS, watchOS, visionOS
 - ✅ **Validated against real themes** — fixture tests import actual VS Code built-in and community theme files (JSONC and strict), plus unit tests of hex parsing, scope priority, and the JSONC sanitizer

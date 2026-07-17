@@ -262,9 +262,424 @@ public enum BuiltInThemes {
         gutterBackground: "#0B0E14", gutterText: "#3D424D", gutterActiveText: "#8A9199",
         statusBackground: "#0B0E14", statusText: "#9DA3A9")
 
-    /// Every built-in palette, in theme-picker display order (not alphabetical).
+    // MARK: - Signature — Windshield
+    //
+    // The only themes here designed FOR this app rather than ported into it.
+
+    /// Windshield Dark — the signature review-first theme. **Greyscale syntax,
+    /// full-colour signal.**
+    ///
+    /// ## The thesis
+    ///
+    /// Every other theme in this file was designed for *writing* code, so each
+    /// one spends its colour budget on the language: keywords pink, strings
+    /// green, types cyan. Sidewatch is a cockpit for *reviewing* what an agent
+    /// already wrote. Here the language is the constant and **the change is the
+    /// variable** — so Windshield spends its entire colour budget on the change
+    /// and pays for it by rendering the code itself in greyscale.
+    ///
+    /// The code is a ladder of silvers separated by ~6.4 L\* per tier, ordered by
+    /// what a reviewer scans first: keyword brightest, then function, type,
+    /// identifiers, literals, comment dimmest. Hue is removed as a channel, so
+    /// luminance has to carry the whole load alone — which is why every tier is
+    /// held at or above 4.5:1 on the background (comments included, at 4.55:1;
+    /// most themes let comments fall to 2.5–3.5:1 and lean on hue to rescue
+    /// them). Derived from the app icon: a near-black tile, a silver windshield,
+    /// one black lens.
+    ///
+    /// ## The split a future contributor must not "fix"
+    ///
+    /// **Syntax is greyscale. Signal is not.** Signal means: the diff tint, the
+    /// git status colours, and the terminal's ANSI palette — the agent says
+    /// "error" in red and "passed" in green, and reading that output is the
+    /// point of the app. Those stay fully saturated. Against greyscale code they
+    /// are the only chroma on screen, which is the entire design: the change
+    /// doesn't merely stand out, it is the only thing there is to see.
+    ///
+    /// So: do **not** saturate the syntax roles, and do **not** desaturate the
+    /// ANSI/accent roles. Either edit collapses the theme into an ordinary one.
+    /// Measured, the loudest syntax role carries chroma 2.9 against the diff
+    /// red's 72.8 — a 24× ratio that *is* the design, not an accident.
+    ///
+    /// ## Why the accent is indigo
+    ///
+    /// ``ThemePalette/accent`` is not decoration in this app: it is the git
+    /// *modified* colour (inline diff tint, gutter bar, minimap, tree and tab
+    /// titles), while *added* and *deleted* are hardcoded green `#3DB554` and
+    /// red `#F24F4A`. Those two hues sit at 131.5° and 1.8°, so the hue that is
+    /// maximally distant from **both** — the one colour that cannot be mistaken
+    /// for either "added" or "deleted" — is 247°, indigo, 115° from each. That
+    /// is the accent, and it is the one exception to the greyscale rule because
+    /// by the split above it is signal, not syntax.
+    ///
+    /// The ANSI red and green are pinned to those same diff constants (ΔE 0.00),
+    /// so a failing test in the terminal is literally the same red as a deleted
+    /// line in the editor — one vocabulary across both panes.
+    public static let windshieldDark = ThemePalette(
+        name: "Windshield Dark",
+        appearance: "dark",
+        background: "#101114",
+        foreground: "#BDC1C5",
+        cursor: "#F1F5FA",
+        selection: "#252930",
+        comment: "#797D80",
+        string: "#898D91",
+        keyword: "#F1F5FA",
+        type: "#CFD3D8",
+        number: "#9A9EA2",
+        function: "#E0E4E8",
+        variable: "#BDC1C5",
+        property: "#ACB0B4",
+        accent: "#9A8CFF",
+        sidebarBackground: "#0C0D10",
+        sidebarText: "#9A9EA2",
+        tabBarBackground: "#0A0B0D",
+        tabText: "#797D80",
+        tabActiveText: "#F1F5FA",
+        border: "#22252A",
+        gutterBackground: "#101114",
+        gutterText: "#6B6F73",
+        gutterActiveText: "#CFD3D8",
+        statusBackground: "#0A0B0D",
+        statusText: "#9A9EA2",
+        // Signal, deliberately at full chroma. Red and green ARE the app's diff
+        // constants; magenta is the accent/"modified" indigo. ANSI black sits
+        // just above the background by universal convention (terminals use slot 0
+        // as a background/block colour, not as text) — bright black is the
+        // readable grey programs actually dim text with.
+        ansiBlack: "#1A1D22", ansiRed: "#F24F4A", ansiGreen: "#3DB554",
+        ansiYellow: "#D9A441", ansiBlue: "#6E8AF0", ansiMagenta: "#9A8CFF",
+        ansiCyan: "#4FB6C4", ansiWhite: "#BDC1C5",
+        ansiBrightBlack: "#797D80", ansiBrightRed: "#FF6F6A",
+        ansiBrightGreen: "#5FD97A", ansiBrightYellow: "#F0C46A",
+        ansiBrightBlue: "#93A9FF", ansiBrightMagenta: "#B9A9FF",
+        ansiBrightCyan: "#6FD3E0", ansiBrightWhite: "#F1F5FA"
+    )
+
+    /// Windshield Light — the daylight half of the signature pair; the icon
+    /// inverted to its silver-on-white side.
+    ///
+    /// Same thesis as ``windshieldDark``: greyscale syntax, full-colour signal.
+    /// The ladder inverts (keyword darkest at 17.7:1 → comment lightest at
+    /// 4.5:1) and the accent deepens to indigo `#4338CA` so it still clears
+    /// 4.5:1 as text on white while staying ~115° from the add-green and
+    /// delete-red.
+    ///
+    /// ## The one place this is not a mirror of the dark theme
+    ///
+    /// Its ANSI palette is rebuilt on a rule the usual light palettes get wrong:
+    /// **on a light background "bright" means more contrast, not more
+    /// luminance.** Lightening a bright variant — the conventional move, and what
+    /// VS Code's own light palette does — walks it toward the background and
+    /// destroys it: VS Code's bright green `#14CE14` scores 2.13:1 on white and
+    /// its bright white `#A5A5A5` scores 2.46:1, i.e. an agent's "tests passed"
+    /// is barely legible. Here every bright variant is *darker* and more
+    /// saturated than its normal, so all 16 slots clear 4.5:1 (worst 4.52) while
+    /// each normal/bright pair stays ≥5.9 ΔE apart. Bright black remains the
+    /// dimmest slot, so programs dimming text still read as dimmed.
+    public static let windshieldLight = ThemePalette(
+        name: "Windshield Light",
+        appearance: "light",
+        background: "#FCFCFD",
+        foreground: "#3B3E41",
+        cursor: "#131619",
+        selection: "#D8DCE2",
+        comment: "#71757A",
+        string: "#63666A",
+        keyword: "#131619",
+        type: "#2D3134",
+        number: "#565A5D",
+        function: "#212427",
+        variable: "#3B3E41",
+        property: "#484C4F",
+        accent: "#4338CA",
+        sidebarBackground: "#F4F5F7",
+        sidebarText: "#484C4F",
+        tabBarBackground: "#EDEEF1",
+        tabText: "#71757A",
+        tabActiveText: "#131619",
+        border: "#DFE1E5",
+        gutterBackground: "#FCFCFD",
+        gutterText: "#868B92",
+        gutterActiveText: "#2D3134",
+        statusBackground: "#EDEEF1",
+        statusText: "#484C4F",
+        ansiBlack: "#131619", ansiRed: "#C0332C", ansiGreen: "#1F7A33",
+        ansiYellow: "#7E5A0E", ansiBlue: "#2F49B8", ansiMagenta: "#4338CA",
+        ansiCyan: "#136E7C", ansiWhite: "#6B7075",
+        ansiBrightBlack: "#71757A", ansiBrightRed: "#9C241E",
+        ansiBrightGreen: "#145E27", ansiBrightYellow: "#654807",
+        ansiBrightBlue: "#1F35A0", ansiBrightMagenta: "#3325B0",
+        ansiBrightCyan: "#0B5764", ansiBrightWhite: "#3B3E41"
+    )
+
+    /// Claude — a warm-charcoal theme built around Anthropic's brand clay
+    /// (`#D97757`, the colour of the Claude Code mascot), used as the accent and
+    /// the caret. Unlike the greyscale Windshield pair this is a full-colour
+    /// theme; its one design rule is that no syntax hue strays near the diff
+    /// signal — strings/keywords/numbers live in the warm clay→amber arc, types
+    /// take a single cool dusty-blue as the counterweight, and NOTHING is green
+    /// or fire-red, so the add-green (`#3DB554`) and delete-red (`#F24F4A`) still
+    /// own those hues on screen. Contrast verified: every syntax role and every
+    /// ANSI slot clears 4.5:1 on the background (tightest real text is the
+    /// comment at 4.71). ANSI red/green are pinned to the app's diff constants so
+    /// a failing test reads as the same red as a deleted line.
+    public static let claude = ThemePalette(
+        name: "Claude",
+        appearance: "dark",
+        background: "#1B1917",
+        foreground: "#E6E1DA",
+        cursor: "#D97757",
+        selection: "#3A342E",
+        comment: "#8C837A",
+        string: "#C9A15E",
+        keyword: "#E0906F",
+        type: "#9DBAC4",
+        number: "#E0A06F",
+        function: "#E8C07D",
+        variable: "#E6E1DA",
+        property: "#C4BEB4",
+        accent: "#D97757",
+        sidebarBackground: "#171512",
+        sidebarText: "#A69E93",
+        tabBarBackground: "#141210",
+        tabText: "#857C72",
+        tabActiveText: "#F0EBE3",
+        border: "#2E2A25",
+        gutterBackground: "#1B1917",
+        gutterText: "#6E665C",
+        gutterActiveText: "#C4BEB4",
+        statusBackground: "#141210",
+        statusText: "#A69E93",
+        // Signal at full chroma: red/green ARE the app's diff constants, and the
+        // clay accent doubles as ANSI magenta's warm neighbour. ansiBlack sits
+        // just above the background (terminals use slot 0 as a block colour, not
+        // text); bright black is the readable grey programs dim text with.
+        ansiBlack: "#2A2622", ansiRed: "#F24F4A", ansiGreen: "#3DB554",
+        ansiYellow: "#D4A24E", ansiBlue: "#7FA8C4", ansiMagenta: "#C08CC4",
+        ansiCyan: "#6FB5B0", ansiWhite: "#E6E1DA",
+        ansiBrightBlack: "#8C837A", ansiBrightRed: "#FF6F6A",
+        ansiBrightGreen: "#5FD97A", ansiBrightYellow: "#E8C07D",
+        ansiBrightBlue: "#9DC0D9", ansiBrightMagenta: "#D6A6DA",
+        ansiBrightCyan: "#8FD0CB", ansiBrightWhite: "#F0EBE3"
+    )
+
+    // MARK: - Ports
+    //
+    // Faithful to each project's published palette. Where a theme's own comment
+    // colour is low-contrast, it is kept as published rather than "improved" —
+    // a port that doesn't match the original everywhere else is a broken port.
+
+    /// Rosé Pine — "all natural pine, faux fur and a bit of soho vibes."
+    ///
+    /// Palette from the official `@rose-pine/palette` export; roles and the ANSI
+    /// set from the Rosé Pine VS Code theme. Note the upstream mapping is
+    /// deliberately unconventional: ANSI green is *pine* (a blue) and ANSI cyan
+    /// is *rose*, and normal/bright are the same colour in every slot but black.
+    public static let rosePine = ThemePalette(
+        name: "Rosé Pine", appearance: "dark",
+        background: "#191724", foreground: "#E0DEF4", cursor: "#E0DEF4", selection: "#403D52",
+        comment: "#6E6A86", string: "#F6C177", keyword: "#31748F", type: "#9CCFD8", number: "#EBBCBA",
+        function: "#EBBCBA", variable: "#E0DEF4", property: "#9CCFD8", accent: "#C4A7E7",
+        sidebarBackground: "#1F1D2E", sidebarText: "#908CAA", tabBarBackground: "#1F1D2E",
+        tabText: "#6E6A86", tabActiveText: "#E0DEF4", border: "#26233A",
+        gutterBackground: "#191724", gutterText: "#6E6A86", gutterActiveText: "#E0DEF4",
+        statusBackground: "#1F1D2E", statusText: "#908CAA",
+        ansiBlack: "#26233A", ansiRed: "#EB6F92", ansiGreen: "#31748F",
+        ansiYellow: "#F6C177", ansiBlue: "#9CCFD8", ansiMagenta: "#C4A7E7",
+        ansiCyan: "#EBBCBA", ansiWhite: "#E0DEF4",
+        ansiBrightBlack: "#908CAA", ansiBrightRed: "#EB6F92",
+        ansiBrightGreen: "#31748F", ansiBrightYellow: "#F6C177",
+        ansiBrightBlue: "#9CCFD8", ansiBrightMagenta: "#C4A7E7",
+        ansiBrightCyan: "#EBBCBA", ansiBrightWhite: "#E0DEF4")
+
+    /// Rosé Pine Moon — the softer, slightly lifted variant of ``rosePine``.
+    public static let rosePineMoon = ThemePalette(
+        name: "Rosé Pine Moon", appearance: "dark",
+        background: "#232136", foreground: "#E0DEF4", cursor: "#E0DEF4", selection: "#44415A",
+        comment: "#6E6A86", string: "#F6C177", keyword: "#3E8FB0", type: "#9CCFD8", number: "#EA9A97",
+        function: "#EA9A97", variable: "#E0DEF4", property: "#9CCFD8", accent: "#C4A7E7",
+        sidebarBackground: "#2A273F", sidebarText: "#908CAA", tabBarBackground: "#2A273F",
+        tabText: "#6E6A86", tabActiveText: "#E0DEF4", border: "#393552",
+        gutterBackground: "#232136", gutterText: "#6E6A86", gutterActiveText: "#E0DEF4",
+        statusBackground: "#2A273F", statusText: "#908CAA",
+        ansiBlack: "#393552", ansiRed: "#EB6F92", ansiGreen: "#3E8FB0",
+        ansiYellow: "#F6C177", ansiBlue: "#9CCFD8", ansiMagenta: "#C4A7E7",
+        ansiCyan: "#EA9A97", ansiWhite: "#E0DEF4",
+        ansiBrightBlack: "#908CAA", ansiBrightRed: "#EB6F92",
+        ansiBrightGreen: "#3E8FB0", ansiBrightYellow: "#F6C177",
+        ansiBrightBlue: "#9CCFD8", ansiBrightMagenta: "#C4A7E7",
+        ansiBrightCyan: "#EA9A97", ansiBrightWhite: "#E0DEF4")
+
+    /// Rosé Pine Dawn — the light variant.
+    ///
+    /// `text` is `#575279`, per the palette's `dist/` export and all six shipped
+    /// VS Code theme JSONs (the repo's `palette.json` disagrees with `#464261`,
+    /// but nothing consumes that file and it predates the built output).
+    public static let rosePineDawn = ThemePalette(
+        name: "Rosé Pine Dawn", appearance: "light",
+        background: "#FAF4ED", foreground: "#575279", cursor: "#575279", selection: "#DFDAD9",
+        comment: "#9893A5", string: "#EA9D34", keyword: "#286983", type: "#56949F", number: "#D7827E",
+        function: "#D7827E", variable: "#575279", property: "#56949F", accent: "#907AA9",
+        sidebarBackground: "#FFFAF3", sidebarText: "#797593", tabBarBackground: "#FFFAF3",
+        tabText: "#9893A5", tabActiveText: "#575279", border: "#F2E9E1",
+        gutterBackground: "#FAF4ED", gutterText: "#9893A5", gutterActiveText: "#575279",
+        statusBackground: "#FFFAF3", statusText: "#797593",
+        ansiBlack: "#F2E9E1", ansiRed: "#B4637A", ansiGreen: "#286983",
+        ansiYellow: "#EA9D34", ansiBlue: "#56949F", ansiMagenta: "#907AA9",
+        ansiCyan: "#D7827E", ansiWhite: "#575279",
+        ansiBrightBlack: "#797593", ansiBrightRed: "#B4637A",
+        ansiBrightGreen: "#286983", ansiBrightYellow: "#EA9D34",
+        ansiBrightBlue: "#56949F", ansiBrightMagenta: "#907AA9",
+        ansiBrightCyan: "#D7827E", ansiBrightWhite: "#575279")
+
+    /// Kanagawa Wave — inspired by Katsushika Hokusai's *The Great Wave*.
+    ///
+    /// Palette and the 16 terminal colors from `kanagawa.nvim` (`colors.lua` and
+    /// the `term` block of `themes.lua`), cross-checked against the project's
+    /// shipped kitty config. Background is `sumiInk3`, the editor background the
+    /// project itself uses — not `sumiInk0`.
+    public static let kanagawa = ThemePalette(
+        name: "Kanagawa Wave", appearance: "dark",
+        background: "#1F1F28", foreground: "#DCD7BA", cursor: "#C8C093", selection: "#2D4F67",
+        comment: "#727169", string: "#98BB6C", keyword: "#957FB8", type: "#7AA89F", number: "#D27E99",
+        function: "#7E9CD8", variable: "#DCD7BA", property: "#E6C384", accent: "#7E9CD8",
+        sidebarBackground: "#16161D", sidebarText: "#C8C093", tabBarBackground: "#16161D",
+        tabText: "#727169", tabActiveText: "#DCD7BA", border: "#2A2A37",
+        gutterBackground: "#1F1F28", gutterText: "#54546D", gutterActiveText: "#C0A36E",
+        statusBackground: "#16161D", statusText: "#C8C093",
+        ansiBlack: "#16161D", ansiRed: "#C34043", ansiGreen: "#76946A",
+        ansiYellow: "#C0A36E", ansiBlue: "#7E9CD8", ansiMagenta: "#957FB8",
+        ansiCyan: "#6A9589", ansiWhite: "#C8C093",
+        ansiBrightBlack: "#727169", ansiBrightRed: "#E82424",
+        ansiBrightGreen: "#98BB6C", ansiBrightYellow: "#E6C384",
+        ansiBrightBlue: "#7FB4CA", ansiBrightMagenta: "#938AA9",
+        ansiBrightCyan: "#7AA89F", ansiBrightWhite: "#DCD7BA")
+
+    /// Everforest Dark (medium) — a green-based, low-contrast forest palette.
+    ///
+    /// Palette from `autoload/everforest.vim`. ANSI follows the VS Code port
+    /// rather than the vim colorscheme: the two disagree on black/white, and
+    /// only the port gives brights a distinct bright-black/bright-white.
+    public static let everforestDark = ThemePalette(
+        name: "Everforest Dark", appearance: "dark",
+        background: "#2D353B", foreground: "#D3C6AA", cursor: "#D3C6AA", selection: "#543A48",
+        comment: "#859289", string: "#A7C080", keyword: "#E67E80", type: "#DBBC7F", number: "#D699B6",
+        function: "#A7C080", variable: "#D3C6AA", property: "#7FBBB3", accent: "#7FBBB3",
+        sidebarBackground: "#232A2E", sidebarText: "#9DA9A0", tabBarBackground: "#232A2E",
+        tabText: "#859289", tabActiveText: "#D3C6AA", border: "#3D484D",
+        gutterBackground: "#2D353B", gutterText: "#7A8478", gutterActiveText: "#D3C6AA",
+        statusBackground: "#232A2E", statusText: "#9DA9A0",
+        ansiBlack: "#343F44", ansiRed: "#E67E80", ansiGreen: "#A7C080",
+        ansiYellow: "#DBBC7F", ansiBlue: "#7FBBB3", ansiMagenta: "#D699B6",
+        ansiCyan: "#83C092", ansiWhite: "#D3C6AA",
+        ansiBrightBlack: "#859289", ansiBrightRed: "#E67E80",
+        ansiBrightGreen: "#A7C080", ansiBrightYellow: "#DBBC7F",
+        ansiBrightBlue: "#7FBBB3", ansiBrightMagenta: "#D699B6",
+        ansiBrightCyan: "#83C092", ansiBrightWhite: "#D3C6AA")
+
+    /// Everforest Light (medium) — the light counterpart to ``everforestDark``.
+    public static let everforestLight = ThemePalette(
+        name: "Everforest Light", appearance: "light",
+        background: "#FDF6E3", foreground: "#5C6A72", cursor: "#5C6A72", selection: "#EAEDC8",
+        comment: "#939F91", string: "#8DA101", keyword: "#F85552", type: "#DFA000", number: "#DF69BA",
+        function: "#8DA101", variable: "#5C6A72", property: "#3A94C5", accent: "#3A94C5",
+        sidebarBackground: "#F4F0D9", sidebarText: "#5C6A72", tabBarBackground: "#EFEBD4",
+        tabText: "#939F91", tabActiveText: "#5C6A72", border: "#E6E2CC",
+        gutterBackground: "#FDF6E3", gutterText: "#A6B0A0", gutterActiveText: "#5C6A72",
+        statusBackground: "#EFEBD4", statusText: "#5C6A72",
+        ansiBlack: "#5C6A72", ansiRed: "#F85552", ansiGreen: "#8DA101",
+        ansiYellow: "#DFA000", ansiBlue: "#3A94C5", ansiMagenta: "#DF69BA",
+        ansiCyan: "#35A77C", ansiWhite: "#939F91",
+        ansiBrightBlack: "#5C6A72", ansiBrightRed: "#F85552",
+        ansiBrightGreen: "#8DA101", ansiBrightYellow: "#DFA000",
+        ansiBrightBlue: "#3A94C5", ansiBrightMagenta: "#DF69BA",
+        ansiBrightCyan: "#35A77C", ansiBrightWhite: "#F4F0D9")
+
+    /// Night Owl — Sarah Drasner's theme "for the night owls out there."
+    ///
+    /// Imported from the published VS Code theme (also this package's
+    /// `nightowl` test fixture), including its own `terminal.ansi*` set.
+    public static let nightOwl = ThemePalette(
+        name: "Night Owl", appearance: "dark",
+        background: "#011627", foreground: "#D6DEEB", cursor: "#80A4C2", selection: "#1D3B53",
+        comment: "#637777", string: "#ECC48D", keyword: "#C792EA", type: "#FFCB8B", number: "#F78C6C",
+        function: "#82AAFF", variable: "#C5E478", property: "#BAEBE2", accent: "#82AAFF",
+        sidebarBackground: "#011627", sidebarText: "#89A4BB", tabBarBackground: "#011627",
+        tabText: "#5F7E97", tabActiveText: "#D2DEE7", border: "#122D42",
+        gutterBackground: "#011627", gutterText: "#4B6479", gutterActiveText: "#C5E4FD",
+        statusBackground: "#011627", statusText: "#5F7E97",
+        ansiBlack: "#011627", ansiRed: "#EF5350", ansiGreen: "#22DA6E",
+        ansiYellow: "#C5E478", ansiBlue: "#82AAFF", ansiMagenta: "#C792EA",
+        ansiCyan: "#21C7A8", ansiWhite: "#FFFFFF",
+        ansiBrightBlack: "#575656", ansiBrightRed: "#EF5350",
+        ansiBrightGreen: "#22DA6E", ansiBrightYellow: "#FFEB95",
+        ansiBrightBlue: "#82AAFF", ansiBrightMagenta: "#C792EA",
+        ansiBrightCyan: "#7FDBCA", ansiBrightWhite: "#FFFFFF")
+
+    /// Catppuccin Latte — the light variant of the pastel Catppuccin family, and
+    /// the counterpart to ``catppuccin`` (Mocha).
+    ///
+    /// Palette from `catppuccin/palette`; roles and ANSI from the Catppuccin VS
+    /// Code extension. ANSI brights 9–14 are bespoke brightened values that do
+    /// not appear in the named palette.
+    ///
+    /// One deliberate deviation: `cursor` is `text`, not the `rosewater` the
+    /// Catppuccin extension specifies. Rosewater is a pale salmon that works as
+    /// a caret on the dark variants but scores only 1.71:1 against Latte's own
+    /// `surface0` selection — i.e. the caret disappears exactly when you select
+    /// the text you're trying to edit. `text` is the same palette's own colour
+    /// and restores it to 5.17:1.
+    public static let catppuccinLatte = ThemePalette(
+        name: "Catppuccin Latte", appearance: "light",
+        background: "#EFF1F5", foreground: "#4C4F69", cursor: "#4C4F69", selection: "#CCD0DA",
+        comment: "#7C7F93", string: "#40A02B", keyword: "#8839EF", type: "#DF8E1D", number: "#FE640B",
+        function: "#1E66F5", variable: "#4C4F69", property: "#179299", accent: "#8839EF",
+        sidebarBackground: "#E6E9EF", sidebarText: "#5C5F77", tabBarBackground: "#DCE0E8",
+        tabText: "#8C8FA1", tabActiveText: "#4C4F69", border: "#BCC0CC",
+        gutterBackground: "#EFF1F5", gutterText: "#9CA0B0", gutterActiveText: "#5C5F77",
+        statusBackground: "#DCE0E8", statusText: "#5C5F77",
+        ansiBlack: "#5C5F77", ansiRed: "#D20F39", ansiGreen: "#40A02B",
+        ansiYellow: "#DF8E1D", ansiBlue: "#1E66F5", ansiMagenta: "#EA76CB",
+        ansiCyan: "#179299", ansiWhite: "#ACB0BE",
+        ansiBrightBlack: "#6C6F85", ansiBrightRed: "#DE293E",
+        ansiBrightGreen: "#49AF3D", ansiBrightYellow: "#EEA02D",
+        ansiBrightBlue: "#456EFF", ansiBrightMagenta: "#FE85D8",
+        ansiBrightCyan: "#2D9FA8", ansiBrightWhite: "#BCC0CC")
+
+    /// GitHub Light — GitHub's light web/editor scheme, and the counterpart to
+    /// ``githubDark``.
+    ///
+    /// Values from a real build of `primer/github-vscode-theme` (its `themes/*.json`
+    /// are generated, not committed). `selection` is the author's intended
+    /// `alpha(accent.fg, 0.2)` flattened over white: upstream declares
+    /// `editor.selectionBackground` twice in one object literal, so the key is
+    /// dropped from every non-high-contrast build and the theme silently
+    /// inherits VS Code's default.
+    public static let githubLight = ThemePalette(
+        name: "GitHub Light", appearance: "light",
+        background: "#FFFFFF", foreground: "#1F2328", cursor: "#0969DA", selection: "#CEE1F8",
+        comment: "#6E7781", string: "#0A3069", keyword: "#CF222E", type: "#953800", number: "#0550AE",
+        function: "#8250DF", variable: "#953800", property: "#0550AE", accent: "#0969DA",
+        sidebarBackground: "#F6F8FA", sidebarText: "#1F2328", tabBarBackground: "#F6F8FA",
+        tabText: "#656D76", tabActiveText: "#1F2328", border: "#D0D7DE",
+        gutterBackground: "#FFFFFF", gutterText: "#8C959F", gutterActiveText: "#1F2328",
+        statusBackground: "#FFFFFF", statusText: "#656D76",
+        ansiBlack: "#24292F", ansiRed: "#CF222E", ansiGreen: "#116329",
+        ansiYellow: "#4D2D00", ansiBlue: "#0969DA", ansiMagenta: "#8250DF",
+        ansiCyan: "#1B7C83", ansiWhite: "#6E7781",
+        ansiBrightBlack: "#57606A", ansiBrightRed: "#A40E26",
+        ansiBrightGreen: "#1A7F37", ansiBrightYellow: "#633C01",
+        ansiBrightBlue: "#218BFF", ansiBrightMagenta: "#A475F9",
+        ansiBrightCyan: "#3192AA", ansiBrightWhite: "#8C959F")
+
+    /// Every built-in palette, in theme-picker display order (not alphabetical):
+    /// the signature pair, then darks, then lights.
     public static let all: [ThemePalette] = [
-        oneDark, dracula, tokyoNight, catppuccin, nord, gruvbox, ayu,
-        monokai, githubDark, solarizedDark, solarizedLight, neon,
+        windshieldDark, windshieldLight, claude,
+        oneDark, dracula, tokyoNight, catppuccin, rosePine, rosePineMoon,
+        kanagawa, everforestDark, nightOwl, nord, gruvbox, ayu,
+        monokai, githubDark, solarizedDark, neon,
+        catppuccinLatte, rosePineDawn, githubLight, everforestLight, solarizedLight,
     ]
 }
