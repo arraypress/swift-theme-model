@@ -251,6 +251,28 @@ public enum BuiltInThemes {
         gutterBackground: "#282828", gutterText: "#7C6F64", gutterActiveText: "#BDAE93",
         statusBackground: "#1D2021", statusText: "#D5C4A1")
 
+    /// Gruvbox Light — the cream-paper companion to Gruvbox Dark (morhetz, MIT).
+    public static let gruvboxLight = ThemePalette(
+        name: "Gruvbox Light", appearance: "light",
+        background: "#FBF1C7", foreground: "#3C3836", cursor: "#3C3836", selection: "#EBDBB2",
+        comment: "#928374", string: "#79740E", keyword: "#9D0006", type: "#B57614", number: "#8F3F71",
+        function: "#076678", variable: "#AF3A03", property: "#427B58", accent: "#AF3A03",
+        sidebarBackground: "#F2E5BC", sidebarText: "#504945", tabBarBackground: "#EBDBB2",
+        tabText: "#928374", tabActiveText: "#282828", border: "#D5C4A1",
+        gutterBackground: "#FBF1C7", gutterText: "#A89984", gutterActiveText: "#504945",
+        statusBackground: "#EBDBB2", statusText: "#504945")
+
+    /// Catppuccin Macchiato — the warm mid-dark variant between Mocha and Frappé (MIT).
+    public static let catppuccinMacchiato = ThemePalette(
+        name: "Catppuccin Macchiato", appearance: "dark",
+        background: "#24273A", foreground: "#CAD3F5", cursor: "#F4DBD6", selection: "#494D64",
+        comment: "#6E738D", string: "#A6DA95", keyword: "#C6A0F6", type: "#EED49F", number: "#F5A97F",
+        function: "#8AADF4", variable: "#CAD3F5", property: "#8BD5CA", accent: "#C6A0F6",
+        sidebarBackground: "#1E2030", sidebarText: "#B8C0E0", tabBarBackground: "#181926",
+        tabText: "#6E738D", tabActiveText: "#CAD3F5", border: "#363A4F",
+        gutterBackground: "#24273A", gutterText: "#5B6078", gutterActiveText: "#A5ADCB",
+        statusBackground: "#181926", statusText: "#B8C0E0")
+
     /// Ayu Dark — near-black with warm orange/gold accents.
     public static let ayu = ThemePalette(
         name: "Ayu Dark", appearance: "dark",
@@ -770,9 +792,9 @@ public enum BuiltInThemes {
     public static let all: [ThemePalette] = [
         windshieldDark, windshieldLight, claude, claudeCode,
         nebula, carbon, synthwave,
-        oneDark, dracula, tokyoNight, catppuccin, rosePine, rosePineMoon,
+        oneDark, dracula, tokyoNight, catppuccin, catppuccinMacchiato, rosePine, rosePineMoon,
         kanagawa, everforestDark, nightOwl, nord, gruvbox, ayu,
         monokai, githubDark, solarizedDark, neon,
-        frost, catppuccinLatte, rosePineDawn, githubLight, everforestLight, solarizedLight,
+        frost, catppuccinLatte, rosePineDawn, githubLight, everforestLight, solarizedLight, gruvboxLight,
     ]
 }

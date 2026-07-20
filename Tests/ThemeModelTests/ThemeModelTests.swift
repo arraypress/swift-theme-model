@@ -344,15 +344,15 @@ final class ThemeModelTests: XCTestCase {
     // MARK: - Built-in inventory
 
     func testBuiltInThemeInventory() {
-        XCTAssertEqual(BuiltInThemes.all.count, 29)
+        XCTAssertEqual(BuiltInThemes.all.count, 31)   // + Catppuccin Macchiato, + Gruvbox Light
         let light = BuiltInThemes.all.filter { !$0.isDark }
         let dark = BuiltInThemes.all.filter { $0.isDark }
-        XCTAssertEqual(dark.count, 22)   // + Claude, + Claude Code, + Nebula/Carbon/Synthwave
+        XCTAssertEqual(dark.count, 23)   // + Catppuccin Macchiato
         // The point of the light additions: daylight work needs real options.
-        XCTAssertEqual(light.count, 7)
+        XCTAssertEqual(light.count, 8)   // + Gruvbox Light
         XCTAssertEqual(light.map(\.name).sorted(),
                        ["Catppuccin Latte", "Everforest Light", "Frost", "GitHub Light",
-                        "Rosé Pine Dawn", "Solarized Light", "Windshield Light"])
+                        "Gruvbox Light", "Rosé Pine Dawn", "Solarized Light", "Windshield Light"])
     }
 
     /// Themes are persisted and looked up BY NAME, so a duplicate name would
