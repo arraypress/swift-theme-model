@@ -504,6 +504,58 @@ public enum BuiltInThemes {
         ansiBrightCyan: "#8FD0CB", ansiBrightWhite: "#FAF9F5"
     )
 
+    // MARK: - Modern
+    //
+    // Designed for this app, not ported — clean "app-modern" palettes (deep neutral or
+    // jewel-toned surfaces, one confident accent). ANSI is left to the curated dark/light
+    // set. Each accent stays clear of the add-green (`#3DB554`) and delete-red (`#F24F4A`),
+    // so the git "modified" tint it drives can never be mistaken for an add or a delete.
+
+    /// Nebula — a deep violet space-dark with vibrant sky / cyan / lime syntax.
+    public static let nebula = ThemePalette(
+        name: "Nebula", appearance: "dark",
+        background: "#13111C", foreground: "#CFCBDE", cursor: "#C4B5FD", selection: "#2C2942",
+        comment: "#6A6685", string: "#B6E88D", keyword: "#C792EA", type: "#7DD3FC", number: "#F59E7D",
+        function: "#82AAFF", variable: "#CFCBDE", property: "#67E8F9", accent: "#A78BFA",
+        sidebarBackground: "#100E18", sidebarText: "#A8A3C0", tabBarBackground: "#0D0B14",
+        tabText: "#6A6685", tabActiveText: "#E8E4F5", border: "#26223A",
+        gutterBackground: "#13111C", gutterText: "#403B58", gutterActiveText: "#A8A3C0",
+        statusBackground: "#0D0B14", statusText: "#A8A3C0")
+
+    /// Carbon — an ultra-minimal near-black (pure neutral, no colour cast) with a single
+    /// electric-blue accent. The flat "Vercel / Linear" modern look.
+    public static let carbon = ThemePalette(
+        name: "Carbon", appearance: "dark",
+        background: "#0C0C0D", foreground: "#ECECEE", cursor: "#3B9EFF", selection: "#26262A",
+        comment: "#6E6E75", string: "#7EE787", keyword: "#3B9EFF", type: "#79C0FF", number: "#D2A8FF",
+        function: "#58A6FF", variable: "#ECECEE", property: "#A5D6FF", accent: "#3B9EFF",
+        sidebarBackground: "#0A0A0B", sidebarText: "#9E9EA4", tabBarBackground: "#08080A",
+        tabText: "#6E6E75", tabActiveText: "#F5F5F6", border: "#1D1D20",
+        gutterBackground: "#0C0C0D", gutterText: "#3A3A3E", gutterActiveText: "#9E9EA4",
+        statusBackground: "#08080A", statusText: "#9E9EA4")
+
+    /// Synthwave — neon magenta + cyan on a deep indigo; the retro-modern glow.
+    public static let synthwave = ThemePalette(
+        name: "Synthwave", appearance: "dark",
+        background: "#191228", foreground: "#E5DBF0", cursor: "#FF6AD5", selection: "#38294F",
+        comment: "#7A6B94", string: "#FDE68A", keyword: "#FF6AD5", type: "#36E0E0", number: "#F97E72",
+        function: "#8B7BF7", variable: "#E5DBF0", property: "#36E0E0", accent: "#FF6AD5",
+        sidebarBackground: "#150F22", sidebarText: "#B4A6C8", tabBarBackground: "#110C1B",
+        tabText: "#7A6B94", tabActiveText: "#F5EDFF", border: "#2E2442",
+        gutterBackground: "#191228", gutterText: "#463A5E", gutterActiveText: "#B4A6C8",
+        statusBackground: "#110C1B", statusText: "#B4A6C8")
+
+    /// Frost — a cool, clean modern light theme: soft blue-white surfaces, crisp blue accent.
+    public static let frost = ThemePalette(
+        name: "Frost", appearance: "light",
+        background: "#FBFCFE", foreground: "#2A2E37", cursor: "#3B82F6", selection: "#DBE7FB",
+        comment: "#8A93A3", string: "#0F9A6A", keyword: "#7C3AED", type: "#C2410C", number: "#2563EB",
+        function: "#2563EB", variable: "#2A2E37", property: "#0E7490", accent: "#3B82F6",
+        sidebarBackground: "#F1F4F9", sidebarText: "#4A505C", tabBarBackground: "#E9EEF5",
+        tabText: "#8A93A3", tabActiveText: "#1A1E27", border: "#DBE1EA",
+        gutterBackground: "#FBFCFE", gutterText: "#AEB6C4", gutterActiveText: "#4A505C",
+        statusBackground: "#E9EEF5", statusText: "#4A505C")
+
     // MARK: - Ports
     //
     // Faithful to each project's published palette. Where a theme's own comment
@@ -717,9 +769,10 @@ public enum BuiltInThemes {
     /// the signature pair, then darks, then lights.
     public static let all: [ThemePalette] = [
         windshieldDark, windshieldLight, claude, claudeCode,
+        nebula, carbon, synthwave,
         oneDark, dracula, tokyoNight, catppuccin, rosePine, rosePineMoon,
         kanagawa, everforestDark, nightOwl, nord, gruvbox, ayu,
         monokai, githubDark, solarizedDark, neon,
-        catppuccinLatte, rosePineDawn, githubLight, everforestLight, solarizedLight,
+        frost, catppuccinLatte, rosePineDawn, githubLight, everforestLight, solarizedLight,
     ]
 }

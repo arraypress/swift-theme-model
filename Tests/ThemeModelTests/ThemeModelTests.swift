@@ -344,14 +344,14 @@ final class ThemeModelTests: XCTestCase {
     // MARK: - Built-in inventory
 
     func testBuiltInThemeInventory() {
-        XCTAssertEqual(BuiltInThemes.all.count, 25)
+        XCTAssertEqual(BuiltInThemes.all.count, 29)
         let light = BuiltInThemes.all.filter { !$0.isDark }
         let dark = BuiltInThemes.all.filter { $0.isDark }
-        XCTAssertEqual(dark.count, 19)   // + Claude, + Claude Code
+        XCTAssertEqual(dark.count, 22)   // + Claude, + Claude Code, + Nebula/Carbon/Synthwave
         // The point of the light additions: daylight work needs real options.
-        XCTAssertEqual(light.count, 6)
+        XCTAssertEqual(light.count, 7)
         XCTAssertEqual(light.map(\.name).sorted(),
-                       ["Catppuccin Latte", "Everforest Light", "GitHub Light",
+                       ["Catppuccin Latte", "Everforest Light", "Frost", "GitHub Light",
                         "Rosé Pine Dawn", "Solarized Light", "Windshield Light"])
     }
 
